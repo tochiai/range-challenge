@@ -3,6 +3,7 @@ import hashlib
 import base64
 import datetime
 from app.dynamo.client import DynamoClient
+from app.stats.stats import StatsClient
 
 from fastapi import FastAPI, Path
 
@@ -10,6 +11,7 @@ app = FastAPI()
 
 
 dynamo = DynamoClient()
+stats = StatsClient()
 
 
 class PostRequest(BaseModel):
@@ -44,8 +46,10 @@ def create_short_url(req: PostRequest):
 def create_short_url(short_url: str = Path(..., example="x7kg9X5VPfK7aCcvYVcCEA==")):
     short_url = short_url.encode("utf-8")
     item = dynamo.get_url(short_url)["Item"]
+    stats.update_stats(short_url)
     return {
         "long_url": item["long_url"],
         "created_at": item["created_at"],
         "short_url": item["short_url"],
+        "stats": stats.get_stats(short_url),
     }
