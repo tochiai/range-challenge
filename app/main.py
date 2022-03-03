@@ -23,11 +23,17 @@ class PostResponse(BaseModel):
     short_url: str
 
 
-@app.post("/short_url", status_code=201, response_model_exclude_unset=True)
-def create_short_url(req: PostRequest):
+def get_short_url(req: PostRequest):
+    if req.custom_url:
+        return req.custom_url.encode("utf-8")
     hash = hashlib.md5(req.long_url.encode("utf-8"))
     # TODO: trim ==
-    short_url = base64.urlsafe_b64encode(hash.digest())
+    return base64.urlsafe_b64encode(hash.digest())
+
+
+@app.post("/short_url", status_code=201, response_model_exclude_unset=True)
+def create_short_url(req: PostRequest):
+    short_url = get_short_url(req)
     dynamo.put_url(short_url, datetime.datetime.now().isoformat(), req.long_url)
     return PostResponse(
         long_url=req.long_url, custom_url=req.custom_url, short_url=short_url
