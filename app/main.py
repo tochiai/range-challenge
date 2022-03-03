@@ -7,9 +7,6 @@ from app.stats.stats import StatsClient
 
 from fastapi import FastAPI, Path, HTTPException
 
-app = FastAPI()
-
-
 dynamo = DynamoClient()
 stats = StatsClient()
 
@@ -29,8 +26,10 @@ def get_short_url(req: PostRequest):
     if req.custom_url:
         return req.custom_url.encode("utf-8")
     hash = hashlib.md5(req.long_url.encode("utf-8"))
-    # TODO: trim ==
     return base64.urlsafe_b64encode(hash.digest())
+
+
+app = FastAPI()
 
 
 @app.post("/short_url", status_code=201, response_model_exclude_unset=True)

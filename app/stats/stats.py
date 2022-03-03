@@ -17,7 +17,10 @@ class StatsClient:
         self.redis.incr(self.visits_key(short_url), amount=1)
         # visit today's date
         self.redis.incr(
-            self.visits_on_date_key(short_url, datetime.date.today().isoformat()),
+            self.visits_on_date_key(
+                short_url,
+                datetime.date.today().isoformat(),
+            ),
             amount=1,
         )
 
@@ -25,7 +28,7 @@ class StatsClient:
         visits = self.redis.get(self.visits_key(short_url))
         today = datetime.date.today()
         # get histogram for last week
-        dates = [today - datetime.timedelta(days=delta) for delta in range(-7, 1)]
+        dates = [today - datetime.timedelta(days=delta) for delta in range(7, -1, -1)]
         keys = [self.visits_on_date_key(short_url, date) for date in dates]
         hist = self.redis.mget(keys)
         hist = dict(zip(dates, hist))
