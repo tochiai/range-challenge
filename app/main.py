@@ -2,10 +2,20 @@ from typing import Optional
 from pydantic import BaseModel, HttpUrl
 import hashlib
 import base64
+import boto3
 
 from fastapi import FastAPI
 
 app = FastAPI()
+
+
+def put_url(short_url: bytes, created_at: str, long_url: str, dynamodb=None):
+    if not dynamodb:
+        dynamodb = boto3.resource("dynamodb", endpoint_url="http://db:8000")
+
+    table = dynamodb.Table("Url")
+    response = table.put_item(Item={"short_url": short_url})
+    return response
 
 
 class Request(BaseModel):
@@ -17,7 +27,9 @@ class Request(BaseModel):
 def create_short_url(req: Request):
     hash = hashlib.md5(req.long_url.encode("utf-8"))
     # TODO: trim ==
-    return base64.urlsafe_b64encode(hash.digest())
+    short_url = base64.urlsafe_b64encode(hash.digest())
+    response = put_url(short_url, "time", req.long_url)
+    return response
 
 
 @app.get("/items/{item_id}")
