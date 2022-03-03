@@ -13,3 +13,5 @@ JSON API that allows the following:
 Store mapping of short_url:long_url in NoSQL K/V store. In my mind DynamoDB makes sense as it uses consistent hashing and we can use the short_url as the partion key, and unlike redis we can store it to disk which should be cheaper. We can front it with a cache for high read traffic.
 
 Store stats in redis since they're relatively small and redis has nice incr commands which can help with concurrent requests simultaneously needing to update that value. Have an expiry of 90 days, which we could lower if it's taking too much space and product allows it. Otherwise we'd probably need to use a different store.
+
+# TODO

@@ -5,7 +5,7 @@ import datetime
 from app.dynamo.client import DynamoClient
 from app.stats.stats import StatsClient
 
-from fastapi import FastAPI, Path
+from fastapi import FastAPI, Path, HTTPException
 
 app = FastAPI()
 
@@ -45,11 +45,15 @@ def create_short_url(req: PostRequest):
 @app.get("/short_url/{short_url}")
 def create_short_url(short_url: str = Path(..., example="x7kg9X5VPfK7aCcvYVcCEA==")):
     short_url = short_url.encode("utf-8")
-    item = dynamo.get_url(short_url)["Item"]
-    stats.update_stats(short_url)
-    return {
-        "long_url": item["long_url"],
-        "created_at": item["created_at"],
-        "short_url": item["short_url"],
-        "stats": stats.get_stats(short_url),
-    }
+    data = dynamo.get_url(short_url)
+    if "Item" in data:
+        item = data["Item"]
+        stats.update_stats(short_url)
+        return {
+            "long_url": item["long_url"],
+            "created_at": item["created_at"],
+            "short_url": item["short_url"],
+            "stats": stats.get_stats(short_url),
+        }
+    else:
+        raise HTTPException(status_code=404, detail="Item not found")
